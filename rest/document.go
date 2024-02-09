@@ -11,9 +11,9 @@ import (
 )
 
 type CreateDocument struct {
-	Title    string
-	FileName string `json: file_name`
-	ParentID string `json:parent_id`
+	Title    string `json:"title"`
+	FileName string `json:"file_name"`
+	ParentID string `json:"parent_id"`
 }
 
 func Upload(
