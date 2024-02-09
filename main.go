@@ -35,7 +35,7 @@ func main() {
 	if fileInfo.IsDir() {
 		fmt.Printf("%s is directory\n", args.DocOrFolder)
 	} else {
-		fmt.Printf("%s is file\n")
+		fmt.Printf("%s is file\n", args.DocOrFolder)
 		rest.Upload(
 			&args.Host,
 			&args.Token,

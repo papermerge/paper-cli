@@ -1,13 +1,13 @@
 package papercli
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
-	"os"
+	"net/http"
 	"path/filepath"
-
-	"github.com/go-resty/resty/v2"
 )
 
 type CreateDocument struct {
@@ -22,42 +22,51 @@ func Upload(
 	file_path *string,
 	parent_id *string) {
 
-	var create_doc = CreateDocument{
+	var doc = CreateDocument{
 		Title:    filepath.Base(*file_path),
 		FileName: filepath.Base(*file_path),
 		ParentID: *parent_id,
 	}
 
-	data, err := json.Marshal(create_doc)
+	create_document(host, token, &doc)
+}
+
+func create_document(host *string, token *string, doc *CreateDocument) {
+
+	jsonData, err := json.Marshal(*doc)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	url := fmt.Sprintf("%s/api/nodes/", *host)
+	req, err := http.NewRequest("POST", url, bytes.NewReader(jsonData))
 
 	if err != nil {
-		log.Fatalf("JSON marshaling failed: %s", err)
+		log.Fatal(err)
 	}
 
-	fileBytes, _ := os.ReadFile(*file_path)
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", *token))
 
-	client := resty.New()
-	client.SetBaseURL(*host)
-
-	resp, err := client.R().
-		SetBody(data).
-		SetAuthToken(*token).
-		Post("/api/nodes")
+	resp, err := http.DefaultClient.Do(req)
 
 	if err != nil {
-		fmt.Println("err:", err)
+		log.Fatal(err)
 	}
 
-	fmt.Println("Status Code: ", resp.StatusCode())
+	defer resp.Body.Close()
 
-	resp2, err2 := client.R().
-		SetBody(fileBytes).
-		SetAuthToken(*token).
-		Post("/api/document")
+	fmt.Println("Status:", resp.Status)
+	body, err := io.ReadAll(resp.Body)
 
-	if err2 != nil {
-		fmt.Println("err:", err2)
+	if err != nil {
+		log.Fatal(err)
 	}
 
-	fmt.Println("Status Code: ", resp2.StatusCode())
+	fmt.Printf("Body: %s", body)
+
+}
+
+func upload_file() {
+
 }
